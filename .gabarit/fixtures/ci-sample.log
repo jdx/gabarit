@@ -1,0 +1,6 @@
+running 4 tests
+ok   test_addition
+FAIL test_subtraction ... expected 2 got 3
+ok   test_multiply
+FAIL test_divide ... division by zero
+done
