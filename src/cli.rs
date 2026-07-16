@@ -9,7 +9,7 @@ use eyre::Result;
 use serde_json::json;
 
 use crate::builtins::{changes, tree};
-use crate::{discovery, mcp, runner, scaffold, schema};
+use crate::{discovery, mcp, runner, scaffold, schema, suggest};
 
 #[derive(Parser)]
 #[command(
@@ -64,6 +64,20 @@ enum Commands {
         #[arg(long, default_value = "7d")]
         since: String,
     },
+    /// Mine agent session transcripts for repeated commands worth jig-ifying
+    Suggest {
+        /// Transcript directory (default: derived from cwd)
+        #[arg(long)]
+        dir: Option<PathBuf>,
+        /// Minimum occurrences to report
+        #[arg(long, default_value_t = 3)]
+        min: usize,
+        /// Max candidates to report
+        #[arg(long, default_value_t = 10)]
+        limit: usize,
+        #[arg(long)]
+        json: bool,
+    },
     /// Run the MCP server over stdio
     Mcp,
 }
@@ -86,8 +100,25 @@ pub async fn run() -> Result<()> {
             depth,
         } => cmd_tree(path, budget, depth),
         Commands::Changes { since } => cmd_changes(since),
+        Commands::Suggest {
+            dir,
+            min,
+            limit,
+            json,
+        } => cmd_suggest(dir, min, limit, json),
         Commands::Mcp => mcp::serve().await,
     }
+}
+
+fn cmd_suggest(dir: Option<PathBuf>, min: usize, limit: usize, as_json: bool) -> Result<()> {
+    let opts = suggest::Options { dir, min, limit };
+    if as_json {
+        let candidates = suggest::suggest(&opts)?;
+        println!("{}", serde_json::to_string_pretty(&candidates)?);
+    } else {
+        print!("{}", suggest::render(&opts)?);
+    }
+    Ok(())
 }
 
 fn cmd_ls(as_json: bool) -> Result<()> {

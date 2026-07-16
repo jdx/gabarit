@@ -18,6 +18,9 @@ If a jig already does what you need, run it — don't re-derive the pipeline:
 gabarit run <name> [args...]
 ```
 
+**Not sure what to forge? Ask gabarit.** `gabarit suggest` mines this project's
+agent session transcripts for repeated command shapes and proposes jigs.
+
 **Forge a jig for anything you'd do twice.** If you find yourself composing the
 same multi-step `rg`/`awk`/`git` dance a second time, crystallize it:
 

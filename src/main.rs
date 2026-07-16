@@ -7,6 +7,7 @@ mod mcp;
 mod runner;
 mod scaffold;
 mod schema;
+mod suggest;
 
 #[tokio::main]
 async fn main() {

@@ -17,7 +17,7 @@ use rmcp::{ErrorData as McpError, RoleServer, ServerHandler, ServiceExt};
 use serde_json::{json, Map, Value};
 
 use crate::builtins::{changes, tree};
-use crate::{discovery, runner, scaffold, schema};
+use crate::{discovery, runner, scaffold, schema, suggest};
 
 #[derive(Clone)]
 pub struct GabaritServer;
@@ -76,6 +76,7 @@ impl ServerHandler for GabaritServer {
             "gabarit_tree" => call_tree(&args),
             "gabarit_changes" => call_changes(&args),
             "gabarit_new" => call_new(&args),
+            "gabarit_suggest" => call_suggest(&args),
             _ => call_jig(&name, &args),
         }
     }
@@ -91,6 +92,18 @@ fn ok_text(s: impl Into<String>) -> CallToolResult {
 
 fn err_text(s: impl Into<String>) -> CallToolResult {
     CallToolResult::error(vec![ContentBlock::text(s.into())])
+}
+
+fn call_suggest(args: &Map<String, Value>) -> Result<CallToolResult, McpError> {
+    let opts = suggest::Options {
+        dir: None,
+        min: args.get("min").and_then(|v| v.as_u64()).unwrap_or(3) as usize,
+        limit: args.get("limit").and_then(|v| v.as_u64()).unwrap_or(10) as usize,
+    };
+    match suggest::render(&opts) {
+        Ok(out) => Ok(ok_text(out)),
+        Err(e) => Ok(err_text(e.to_string())),
+    }
 }
 
 fn call_jig(tool_name: &str, args: &Map<String, Value>) -> Result<CallToolResult, McpError> {
@@ -225,6 +238,17 @@ fn builtin_tools() -> Vec<Tool> {
                     "content": {"type": "string", "description": "Full file contents including #USAGE/#GABARIT headers"}
                 },
                 "required": ["name"]
+            }))),
+        ),
+        Tool::new(
+            "gabarit_suggest",
+            "Mine this project's agent session transcripts for repeated command shapes worth crystallizing into jigs.",
+            Arc::new(obj(json!({
+                "type": "object",
+                "properties": {
+                    "min": {"type": "integer", "description": "Minimum occurrences to report (default 3)"},
+                    "limit": {"type": "integer", "description": "Max candidates to report (default 10)"}
+                }
             }))),
         ),
     ]

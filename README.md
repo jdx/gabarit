@@ -63,6 +63,14 @@ gabarit changes --since 7d           # dense digest of recent git activity
 
 `tree` aggregates repetitive directories, makes every elision explicit, and renders as deep as the token budget allows. `changes` summarizes commits, the files with the most churn, and working-tree state.
 
+### `gabarit suggest` — notice what's worth forging
+
+```sh
+gabarit suggest              # mine agent session transcripts for repeated commands
+```
+
+`suggest` reads your coding agent's session transcripts for the current project (Claude Code's JSONL logs) and normalizes every shell command into a *shape* — programs, subcommands, and flags kept; operands replaced with `_` — so `rg foo src | head -5` and `rg bar lib | head -20` count as the same repeated operation. Shapes that recur across sessions are exactly the things worth crystallizing into jigs, and each suggestion comes with a ready-made `gabarit new` invocation. Also available to agents as the `gabarit_suggest` MCP tool.
+
 ## Connect to an agent (MCP)
 
 `gabarit mcp` is a stdio MCP server. Every jig plus the built-ins appear as typed tools, and the list live-reloads as jig files change — an agent sees a tool the moment it's forged.
@@ -81,7 +89,7 @@ A jig may declare a `#GABARIT test = "<args>"` line: one sample invocation, run 
 
 ## Roadmap
 
-Not yet in v1: execution sandboxing, a "suggest" loop that mines session transcripts for repeated command shapes worth crystallizing, automatic hygiene/demotion of broken jigs, and multi-file jigs.
+Not yet: execution sandboxing, automatic hygiene/demotion of broken jigs, and multi-file jigs.
 
 ## License
 
