@@ -1,5 +1,13 @@
 # gabarit
 
+> # ⚠️ SUPER WORK IN PROGRESS — IGNORE THIS ⚠️
+>
+> **This is an early, half-baked experiment. Do not use it. Do not depend on it.
+> Do not file issues or PRs. Everything here — the name, the format, the CLI, the
+> MCP surface — will change or disappear without notice.** It exists in public only
+> so the author can poke at it. If you stumbled onto this repo: nothing to see here,
+> please move along.
+
 **Toolbelt for coding agents — forge, discover, and run project-local tools ("jigs").**
 
 Coding agents re-derive the same multi-step shell work every session. Skills persist *instructions*; MCP servers are human-authored *capabilities*. Nothing lets an agent crystallize repeated work into a persistent, typed, discoverable tool.
