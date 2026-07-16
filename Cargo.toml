@@ -1,0 +1,17 @@
+[package]
+name = "gabarit"
+version = "0.0.1"
+edition = "2021"
+description = "Toolbelt for coding agents — forge, discover, and run project-local tools (jigs)"
+license = "MIT"
+repository = "https://github.com/jdx/gabarit"
+homepage = "https://github.com/jdx/gabarit"
+keywords = ["agent", "mcp", "cli", "tools", "ai"]
+categories = ["command-line-utilities", "development-tools"]
+readme = "README.md"
+
+[[bin]]
+name = "gabarit"
+path = "src/main.rs"
+
+[dependencies]
