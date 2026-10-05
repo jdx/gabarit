@@ -1,6 +1,6 @@
 [package]
 name = "gabarit"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "Toolbelt for coding agents — forge, discover, and run project-local tools (jigs)"
 license = "MIT"
