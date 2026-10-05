@@ -16,7 +16,7 @@ path = "src/main.rs"
 
 [dependencies]
 clap = { version = "4", features = ["derive"] }
-usage-lib = { version = "3.5", features = ["docs"] }
+usage-lib = { version = "6.0", features = ["docs"] }
 rmcp = { version = "2.2", features = ["server", "transport-io"] }
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "io-std", "sync", "process", "time"] }
 notify = "8"
