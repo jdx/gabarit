@@ -28,6 +28,9 @@ enum Commands {
     Ls {
         #[arg(long)]
         json: bool,
+        /// Include jigs marked `hide = true`
+        #[arg(long)]
+        all: bool,
     },
     /// Scaffold a new jig
     New {
@@ -61,6 +64,7 @@ enum Commands {
     },
     /// Summarize recent git activity
     Changes {
+        path: Option<PathBuf>,
         #[arg(long, default_value = "7d")]
         since: String,
     },
@@ -85,7 +89,7 @@ enum Commands {
 pub async fn run() -> Result<()> {
     let cli = Cli::parse();
     match cli.command {
-        Commands::Ls { json } => cmd_ls(json),
+        Commands::Ls { json, all } => cmd_ls(json, all),
         Commands::New {
             name,
             description,
@@ -99,7 +103,7 @@ pub async fn run() -> Result<()> {
             budget,
             depth,
         } => cmd_tree(path, budget, depth),
-        Commands::Changes { since } => cmd_changes(since),
+        Commands::Changes { path, since } => cmd_changes(path, since),
         Commands::Suggest {
             dir,
             min,
@@ -121,8 +125,11 @@ fn cmd_suggest(dir: Option<PathBuf>, min: usize, limit: usize, as_json: bool) ->
     Ok(())
 }
 
-fn cmd_ls(as_json: bool) -> Result<()> {
-    let jigs = discovery::discover();
+fn cmd_ls(as_json: bool, all: bool) -> Result<()> {
+    let jigs: Vec<_> = discovery::discover()
+        .into_iter()
+        .filter(|j| all || !j.header.hide)
+        .collect();
     if as_json {
         let rows: Vec<_> = jigs
             .iter()
@@ -275,8 +282,9 @@ fn cmd_tree(path: Option<PathBuf>, budget: usize, depth: Option<usize>) -> Resul
     Ok(())
 }
 
-fn cmd_changes(since: String) -> Result<()> {
-    let out = changes::render(&PathBuf::from("."), &since)?;
+fn cmd_changes(path: Option<PathBuf>, since: String) -> Result<()> {
+    let root = path.unwrap_or_else(|| PathBuf::from("."));
+    let out = changes::render(&root, &since)?;
     print!("{out}");
     Ok(())
 }

@@ -32,6 +32,9 @@ impl GabaritServer {
     fn all_tools(&self) -> Vec<Tool> {
         let mut tools = builtin_tools();
         for jig in discovery::discover() {
+            if jig.header.hide {
+                continue;
+            }
             let desc = jig
                 .description()
                 .unwrap_or_else(|| format!("jig: {}", jig.name));
@@ -68,17 +71,33 @@ impl ServerHandler for GabaritServer {
     async fn call_tool(
         &self,
         request: CallToolRequestParams,
-        _context: RequestContext<RoleServer>,
+        context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
         let name = request.name.to_string();
         let args = request.arguments.unwrap_or_default();
-        match name.as_str() {
+        let result = match name.as_str() {
             "gabarit_tree" => call_tree(&args),
             "gabarit_changes" => call_changes(&args),
             "gabarit_new" => call_new(&args),
             "gabarit_suggest" => call_suggest(&args),
             _ => call_jig(&name, &args),
+        };
+        // Forging a jig changes the tool list immediately — notify without
+        // waiting for the filesystem watcher, which may not yet be watching a
+        // freshly-created `.gabarit/jigs` directory. Spawn rather than await:
+        // the notification travels through the same peer channel this handler
+        // runs on, so awaiting it inline would deadlock the service loop.
+        if name == "gabarit_new" {
+            if let Ok(res) = &result {
+                if !res.is_error.unwrap_or(false) {
+                    let peer = context.peer.clone();
+                    tokio::spawn(async move {
+                        let _ = peer.notify_tool_list_changed().await;
+                    });
+                }
+            }
         }
+        result
     }
 
     async fn on_initialized(&self, context: NotificationContext<RoleServer>) {
@@ -166,7 +185,12 @@ fn call_changes(args: &Map<String, Value>) -> Result<CallToolResult, McpError> {
         .and_then(|v| v.as_str())
         .unwrap_or("7d")
         .to_string();
-    match changes::render(&PathBuf::from("."), &since) {
+    let path = args
+        .get("path")
+        .and_then(|v| v.as_str())
+        .map(PathBuf::from)
+        .unwrap_or_else(|| PathBuf::from("."));
+    match changes::render(&path, &since) {
         Ok(out) => Ok(ok_text(out)),
         Err(e) => Ok(err_text(e.to_string())),
     }
@@ -222,6 +246,7 @@ fn builtin_tools() -> Vec<Tool> {
             Arc::new(obj(json!({
                 "type": "object",
                 "properties": {
+                    "path": {"type": "string", "description": "Repo directory (default: cwd)"},
                     "since": {"type": "string", "description": "Ref (e.g. HEAD~5) or duration (e.g. 7d); default 7d"}
                 }
             }))),

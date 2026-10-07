@@ -94,6 +94,14 @@ set -euo pipefail
     }
 
     #[test]
+    fn honors_hide_in_header_block() {
+        let src =
+            "#!/usr/bin/env bash\n#GABARIT description = \"x\"\n#GABARIT hide = true\nset -e\n";
+        let h = parse(src);
+        assert!(h.hide);
+    }
+
+    #[test]
     fn collects_unknown_keys() {
         let src = "#GABARIT description = \"x\"\n#GABARIT bogus = 1\n";
         let h = parse(src);
